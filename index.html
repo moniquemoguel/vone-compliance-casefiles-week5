@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Compliance Casefiles: The Trust Audit (Week 5)</title>
+  <style>
+    :root{
+      --vone-blue:#4797cd;
+      --bg:#0b1220;
+      --card:rgba(255,255,255,0.08);
+      --text:rgba(255,255,255,0.92);
+      --muted:rgba(255,255,255,0.72);
+      --border:rgba(255,255,255,0.14);
+      --good:rgba(0,255,140,0.18);
+      --warn:rgba(255,193,7,0.18);
+      --bad:rgba(255,82,82,0.16);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      background: radial-gradient(1200px 600px at 15% 10%, rgba(71,151,205,0.26), transparent 60%),
+                  radial-gradient(1200px 600px at 80% 20%, rgba(255,255,255,0.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding:18px;
+    }
+    .app{
+      width:min(1100px,100%);
+      border:1px solid var(--border);
+      border-radius:18px;
+      overflow:hidden;
+      background:rgba(0,0,0,0.28);
+      backdrop-filter: blur(8px);
+      box-shadow:0 18px 50px rgba(0,0,0,0.35);
+    }
+    header{
+      padding:16px 18px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .brand{display:flex;flex-direction:column;gap:2px}
+    .brand h1{margin:0;font-size:16px}
+    .brand p{margin:0;font-size:12px;color:var(--muted)}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;border-radius:999px;border:1px solid var(--border);
+      color:var(--muted);font-size:12px;user-select:none;white-space:nowrap;
+    }
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--vone-blue);box-shadow:0 0 16px rgba(71,151,205,0.9)}
+    main{padding:16px 18px 18px}
+    .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}
+    @media(max-width:980px){.grid{grid-template-columns:1fr}}
+    .card{border:1px solid var(--border);border-radius:16px;background:var(--card);padding:14px}
+    .title{margin:0 0 6px;font-size:18px}
+    .text{margin:0 0 12px;line-height:1.45;color:var(--muted);font-size:14px;white-space:pre-wrap}
+
+    .casebox{
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:rgba(0,0,0,0.20);
+      padding:12px;
+      margin-bottom:12px;
+    }
+    .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .tag{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.18);
+      font-size:12px;color:rgba(255,255,255,0.88);
+      background:rgba(0,0,0,0.18);
+    }
+
+    .stepper{
+      display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px;
+    }
+    .step{
+      padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.18);
+      font-size:12px;color:rgba(255,255,255,0.78);
+      background:rgba(0,0,0,0.16);
+    }
+    .step.active{
+      border-color:rgba(71,151,205,0.55);
+      background:rgba(71,151,205,0.18);
+      color:rgba(255,255,255,0.92);
+    }
+
+    .question{
+      margin-top:6px;
+      font-size:14px;
+      color:rgba(255,255,255,0.90);
+    }
+
+    .options{display:grid;gap:10px;margin-top:10px}
+    button.opt{
+      width:100%;
+      text-align:left;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:rgba(0,0,0,0.22);
+      color:var(--text);
+      cursor:pointer;
+      transition:border-color .12s ease, transform .04s ease;
+      font-size:14px;
+      line-height:1.25;
+    }
+    button.opt:hover{border-color:rgba(71,151,205,0.55)}
+    button.opt:active{transform:translateY(1px)}
+    button.opt[disabled]{opacity:.65;cursor:not-allowed}
+
+    .feedback{
+      margin-top:12px;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      font-size:13px;
+      line-height:1.35;
+      white-space:pre-wrap;
+      display:none;
+    }
+    .feedback.good{background:var(--good)}
+    .feedback.warn{background:var(--warn)}
+    .feedback.bad{background:var(--bad)}
+
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .btn{
+      border:1px solid var(--border);
+      background:rgba(0,0,0,0.22);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      cursor:pointer;
+      font-size:13px;
+    }
+    .btn.primary{background:rgba(71,151,205,0.24);border-color:rgba(71,151,205,0.55)}
+    .btn[disabled]{opacity:.65;cursor:not-allowed}
+
+    .side h3{margin:0 0 8px;font-size:13px;color:rgba(255,255,255,0.86)}
+    .meter{display:grid;gap:10px}
+    .bar{height:10px;border-radius:999px;border:1px solid var(--border);background:rgba(0,0,0,0.18);overflow:hidden}
+    .fill{height:100%;background:var(--vone-blue);width:0%}
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    .stat{border:1px solid var(--border);border-radius:14px;background:rgba(0,0,0,0.18);padding:10px}
+    .stat p{margin:0;color:var(--muted);font-size:12px}
+    .stat strong{display:block;font-size:16px;color:var(--text);margin-top:4px}
+    .small{font-size:12px;color:var(--muted)}
+    .log{
+      margin-top:12px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:rgba(0,0,0,0.18);
+      padding:12px;
+    }
+    .log h4{margin:0 0 6px;font-size:12px;color:rgba(255,255,255,0.90)}
+    .log ul{margin:0;padding-left:18px;color:rgba(255,255,255,0.86);font-size:12px;line-height:1.45}
+    .codebox{
+      margin-top:12px;
+      display:none;
+      border:1px dashed rgba(255,255,255,0.30);
+      border-radius:14px;
+      padding:12px;
+      background:rgba(0,0,0,0.22);
+    }
+    .code{
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+      font-size:16px;letter-spacing:.4px;margin-top:6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <h1>Compliance Casefiles: The Trust Audit</h1>
+        <p>Week 5 Simulation · obligations → policies/controls → evidence → audit readiness</p>
+      </div>
+      <div class="pill"><span class="dot"></span><span id="caseText">Case 1 of 3</span></div>
+    </header>
+
+    <main>
+      <div class="grid">
+        <!-- Left -->
+        <section class="card">
+          <h2 class="title" id="caseTitle"></h2>
+          <p class="text" id="caseIntro"></p>
+
+          <div class="casebox">
+            <div class="badges" id="caseTags"></div>
+          </div>
+
+          <div class="stepper">
+            <div class="step" id="s1">1) Obligation</div>
+            <div class="step" id="s2">2) Policy/Control</div>
+            <div class="step" id="s3">3) Evidence</div>
+            <div class="step" id="s4">Mini Audit</div>
+          </div>
+
+          <div class="question" id="question"></div>
+          <div class="options" id="options"></div>
+          <div class="feedback" id="feedback"></div>
+
+          <div class="actions">
+            <button class="btn primary" id="nextBtn" disabled>Continue</button>
+            <button class="btn" id="resetBtn">Restart Case</button>
+          </div>
+
+          <div class="codebox" id="codeBox">
+            <div class="feedback good" style="display:block" id="finalSummary"></div>
+            <div class="small">Completion Code (paste into VONE):</div>
+            <div class="code" id="completionCode"></div>
+            <div class="actions" style="margin-top:10px;">
+              <button class="btn primary" id="copyBtn">Copy Code</button>
+              <button class="btn" id="replayBtn">Play Again</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right -->
+        <aside class="card side">
+          <h3>Audit Readiness Dashboard</h3>
+          <div class="meter">
+            <div>
+              <div class="small">Trust & Fairness Thinking</div>
+              <div class="bar"><div class="fill" id="trustFill"></div></div>
+            </div>
+            <div>
+              <div class="small">Documentation Discipline</div>
+              <div class="bar"><div class="fill" id="docFill"></div></div>
+            </div>
+            <div>
+              <div class="small">Evidence Quality</div>
+              <div class="bar"><div class="fill" id="evidenceFill"></div></div>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <p>Rank</p>
+              <strong id="rankText">—</strong>
+            </div>
+            <div class="stat">
+              <p>Score</p>
+              <strong id="scoreText">0</strong>
+            </div>
+          </div>
+
+          <div class="log">
+            <h4>Casefile Notes (what you collected)</h4>
+            <ul id="notes"></ul>
+          </div>
+
+          <p class="small" style="margin-top:12px;">
+            Week 5 reminder: compliance isn’t “rules for rules.” It’s how organizations prove responsibility with policies, controls, and evidence.
+          </p>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // No legal claims; teach concepts through scenarios.
+    const cases = [
+      {
+        title: "Case 1: Student Portal (Education)",
+        intro: "A student portal stores learner profiles, grades, and attendance. A teacher wants to export a full class list to a personal device “for convenience.”\n\nYour job: identify the compliance focus and what proof would matter in an audit.",
+        tags: ["Industry: Education", "Data: Student records", "Theme: Trust"],
+        steps: [
+          {
+            q: "Which compliance obligation is the best focus here?",
+            correct: 0,
+            opts: [
+              { t: "Protect personal data and ensure appropriate access (privacy + access control).", d:"Best: obligations vary by data type; student records require careful handling." },
+              { t: "Only worry about speed and convenience.", d:"Not compliance. Convenience is not an obligation." },
+              { t: "Ignore because it’s internal and not public.", d:"Internal systems still require responsible handling and controls." }
+            ],
+            impact: { trust:+3, doc:+1, ev:+1 },
+            note: "Obligation: privacy + access control for student data"
+          },
+          {
+            q: "Pick the strongest policy/control to reduce risk (not just talk about it).",
+            correct: 0,
+            opts: [
+              { t: "Role-based access + export limits for sensitive lists.", d:"Controls should make the safe action the default." },
+              { t: "A poster that says “Be Responsible.”", d:"Feels nice, but it’s not a real control." },
+              { t: "Allow anyone to export as long as they promise to delete it.", d:"Promises are not controls." }
+            ],
+            impact: { trust:+2, doc:+2, ev:+1 },
+            note: "Control: role-based access + export limits"
+          },
+          {
+            q: "What evidence best proves the control works?",
+            correct: 0,
+            opts: [
+              { t: "Access logs showing who exported what and when + permissions configuration.", d:"Evidence is proof, not opinions." },
+              { t: "A meeting note saying “we care about privacy.”", d:"That’s not enough by itself." },
+              { t: "A screenshot of the homepage.", d:"Not related to the control." }
+            ],
+            impact: { trust:+1, doc:+2, ev:+3 },
+            note: "Evidence: logs + permissions config"
+          },
+          {
+            q: "Mini Audit: Is this more like an internal or external audit situation?",
+            correct: 1,
+            opts: [
+              { t: "External audit (a third party checks you).", d:"External audits are performed by independent parties." },
+              { t: "Internal audit (you check yourself first).", d:"Exactly. Audit readiness starts internally." },
+              { t: "Not an audit because no one complained.", d:"Audits are proactive, not complaint-driven." }
+            ],
+            impact: { trust:+1, doc:+2, ev:+1 },
+            note: "Audit type: internal (readiness check)"
+          }
+        ]
+      },
+      {
+        title: "Case 2: Online Store (Retail)",
+        intro: "A small online store collects customer emails, addresses, and order history. The owner wants to start using an email marketing tool and upload the full customer list.\n\nYour job: make it responsible and audit-ready.",
+        tags: ["Industry: Retail", "Data: Customer contact info", "Theme: Fairness"],
+        steps: [
+          {
+            q: "Which compliance focus is most relevant?",
+            correct: 0,
+            opts: [
+              { t: "Responsible data use: notice/consent choices and handling personal info appropriately.", d:"Obligations vary by data type and use." },
+              { t: "Only focus on sales growth.", d:"Growth matters, but compliance protects trust." },
+              { t: "No obligations because it’s a small business.", d:"Size doesn’t erase responsibility." }
+            ],
+            impact: { trust:+3, doc:+1, ev:+1 },
+            note: "Obligation: responsible data use and handling personal info"
+          },
+          {
+            q: "Pick the best control/policy approach for this situation.",
+            correct: 0,
+            opts: [
+              { t: "Documented marketing policy + opt-out process + limit data shared to what’s necessary.", d:"Minimize exposure and clarify rules." },
+              { t: "Upload everything everywhere to save time.", d:"That’s how data spreads without control." },
+              { t: "Don’t document anything, just “do the right thing.”", d:"Audits need evidence. Intent isn’t enough." }
+            ],
+            impact: { trust:+2, doc:+2, ev:+1 },
+            note: "Control: marketing policy + opt-out + data minimization"
+          },
+          {
+            q: "Which evidence best demonstrates responsibility?",
+            correct: 0,
+            opts: [
+              { t: "Policy doc + list of what data is shared + proof opt-out works (screens + logs).", d:"Evidence shows the system works in practice." },
+              { t: "A promise that the vendor is reputable.", d:"Vendor reputation is not evidence of your controls." },
+              { t: "A logo that says “Trusted.”", d:"Branding is not audit evidence." }
+            ],
+            impact: { trust:+1, doc:+2, ev:+3 },
+            note: "Evidence: policy + data map + opt-out proof"
+          },
+          {
+            q: "Mini Audit: Which best describes external audits?",
+            correct: 0,
+            opts: [
+              { t: "A third party checks controls and evidence against a standard or agreement.", d:"That’s the idea: independent validation." },
+              { t: "Only employees review each other informally.", d:"That’s internal review, not external." },
+              { t: "Audits only happen after a major breach.", d:"Audits are often scheduled and proactive." }
+            ],
+            impact: { trust:+1, doc:+1, ev:+1 },
+            note: "External audit: independent validation against standard"
+          }
+        ]
+      },
+      {
+        title: "Case 3: Clinic Appointment System (Health)",
+        intro: "A clinic appointment system stores patient names, contact details, and visit notes. A staff member wants to use a personal messaging app to remind patients.\n\nYour job: reduce risk and prepare proof.",
+        tags: ["Industry: Health", "Data: Highly sensitive", "Theme: Accountability"],
+        steps: [
+          {
+            q: "What’s the strongest compliance focus here?",
+            correct: 0,
+            opts: [
+              { t: "Protect sensitive information with strict access, secure communication, and documented handling.", d:"Sensitive data increases obligations and evidence needs." },
+              { t: "Let staff use any tool they like if it’s faster.", d:"Speed without controls creates harm." },
+              { t: "Only focus on making messages friendly.", d:"Tone isn’t compliance." }
+            ],
+            impact: { trust:+3, doc:+1, ev:+1 },
+            note: "Obligation: secure handling of sensitive health data"
+          },
+          {
+            q: "Which control/policy is the best fit?",
+            correct: 0,
+            opts: [
+              { t: "Approved secure messaging process + access rules + training for staff.", d:"Layered controls: process + rules + training." },
+              { t: "Allow personal apps but ask staff to delete messages later.", d:"Deletion promises don’t control exposure." },
+              { t: "Do nothing until there’s a complaint.", d:"Reactive compliance fails trust." }
+            ],
+            impact: { trust:+2, doc:+2, ev:+1 },
+            note: "Control: approved secure messaging + rules + training"
+          },
+          {
+            q: "Which evidence would an auditor trust most?",
+            correct: 0,
+            opts: [
+              { t: "Approved procedure + training completion + logs showing secure messages were used.", d:"Evidence proves behavior and controls." },
+              { t: "A memo saying ‘don’t do that.’", d:"Better than nothing, but weak without proof." },
+              { t: "A verbal statement from a manager.", d:"Not durable evidence." }
+            ],
+            impact: { trust:+1, doc:+2, ev:+3 },
+            note: "Evidence: procedure + training proof + usage logs"
+          },
+          {
+            q: "Mini Audit: Internal audit vs external audit (best distinction)?",
+            correct: 0,
+            opts: [
+              { t: "Internal = your organization checks itself; External = an independent party checks you.", d:"Clear and professional distinction." },
+              { t: "Internal audits don’t require documentation.", d:"They do. Audit readiness starts internally." },
+              { t: "External audits are only for big companies.", d:"External reviews can apply to many org types." }
+            ],
+            impact: { trust:+1, doc:+2, ev:+1 },
+            note: "Audit: internal vs external distinction"
+          }
+        ]
+      }
+    ];
+
+    // UI
+    const caseText = document.getElementById("caseText");
+    const caseTitle = document.getElementById("caseTitle");
+    const caseIntro = document.getElementById("caseIntro");
+    const caseTags = document.getElementById("caseTags");
+
+    const s1 = document.getElementById("s1");
+    const s2 = document.getElementById("s2");
+    const s3 = document.getElementById("s3");
+    const s4 = document.getElementById("s4");
+
+    const question = document.getElementById("question");
+    const options = document.getElementById("options");
+    const feedback = document.getElementById("feedback");
+
+    const nextBtn = document.getElementById("nextBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const trustFill = document.getElementById("trustFill");
+    const docFill = document.getElementById("docFill");
+    const evidenceFill = document.getElementById("evidenceFill");
+    const rankText = document.getElementById("rankText");
+    const scoreText = document.getElementById("scoreText");
+
+    const notes = document.getElementById("notes");
+    const codeBox = document.getElementById("codeBox");
+    const completionCode = document.getElementById("completionCode");
+    const finalSummary = document.getElementById("finalSummary");
+    const copyBtn = document.getElementById("copyBtn");
+    const replayBtn = document.getElementById("replayBtn");
+
+    let caseIndex = 0;
+    let stepIndex = 0;
+
+    let trust = 0;
+    let doc = 0;
+    let ev = 0;
+    let score = 0;
+
+    let caseNotes = [];
+
+    function clamp(n){ return Math.max(0, Math.min(100, n)); }
+
+    function rank(){
+      const total = trust + doc + ev;
+      if (total >= 230) return "Audit-Ready Professional";
+      if (total >= 190) return "Compliance Translator";
+      if (total >= 150) return "Trust Builder";
+      return "Policy Tourist (leveling up)";
+    }
+
+    function setStepsActive(){
+      [s1,s2,s3,s4].forEach((el,i)=>{
+        el.classList.toggle("active", i===stepIndex);
+      });
+    }
+
+    function updateMeters(){
+      trustFill.style.width = clamp(trust) + "%";
+      docFill.style.width = clamp(doc) + "%";
+      evidenceFill.style.width = clamp(ev) + "%";
+      scoreText.textContent = String(score);
+      rankText.textContent = rank();
+    }
+
+    function renderNotes(){
+      notes.innerHTML = "";
+      caseNotes.forEach(n=>{
+        const li = document.createElement("li");
+        li.textContent = n;
+        notes.appendChild(li);
+      });
+    }
+
+    function lockOptions(){
+      Array.from(options.querySelectorAll("button.opt")).forEach(b=>b.disabled=true);
+    }
+
+    function renderCase(){
+      codeBox.style.display = "none";
+      feedback.style.display = "none";
+      nextBtn.disabled = true;
+
+      const c = cases[caseIndex];
+      caseText.textContent = `Case ${caseIndex+1} of ${cases.length}`;
+      caseTitle.textContent = c.title;
+      caseIntro.textContent = c.intro;
+
+      caseTags.innerHTML = "";
+      c.tags.forEach(t=>{
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = t;
+        caseTags.appendChild(tag);
+      });
+
+      setStepsActive();
+      renderStep();
+    }
+
+    function renderStep(){
+      feedback.style.display = "none";
+      nextBtn.disabled = true;
+      options.innerHTML = "";
+
+      const c = cases[caseIndex];
+      const step = c.steps[stepIndex];
+
+      question.textContent = step.q;
+
+      step.opts.forEach((o, idx)=>{
+        const btn = document.createElement("button");
+        btn.className = "opt";
+        btn.textContent = o.t;
+        btn.addEventListener("click", ()=>choose(idx, step));
+        options.appendChild(btn);
+      });
+
+      setStepsActive();
+      updateMeters();
+      renderNotes();
+    }
+
+    function choose(idx, step){
+      lockOptions();
+
+      const correct = (idx === step.correct);
+      const tone = correct ? "good" : "warn";
+
+      // Scoring (lightweight, encourages correct)
+      const base = correct ? 22 : 8;
+      score += base;
+
+      // Add meters based on step impact; less if incorrect
+      const mult = correct ? 1 : 0.5;
+      trust += (step.impact.trust * 10 * mult);
+      doc += (step.impact.doc * 10 * mult);
+      ev += (step.impact.ev * 10 * mult);
+
+      // Add notes once per step
+      if (!caseNotes.includes(step.note)) caseNotes.push(step.note);
+
+      feedback.className = "feedback " + tone;
+      feedback.style.display = "block";
+      feedback.textContent =
+        (correct ? "✅ Good call.\n" : "⚠️ Not the strongest option.\n") +
+        step.opts[idx].d +
+        "\n\nKey idea: compliance is shown through policies, controls, and evidence.";
+
+      nextBtn.disabled = false;
+      updateMeters();
+      renderNotes();
+    }
+
+    function next(){
+      const c = cases[caseIndex];
+
+      if (stepIndex < c.steps.length - 1){
+        stepIndex++;
+        renderStep();
+        return;
+      }
+
+      // End of case
+      if (caseIndex < cases.length - 1){
+        caseIndex++;
+        stepIndex = 0;
+        // small bonus for finishing a case
+        score += 10;
+        renderCase();
+        return;
+      }
+
+      // End of all cases
+      endGame();
+    }
+
+    function endGame(){
+      options.innerHTML = "";
+      question.textContent = "Casefiles closed.";
+      feedback.style.display = "none";
+      nextBtn.disabled = true;
+
+      const total = Math.round(score);
+      const random3 = Math.floor(Math.random() * 900) + 100;
+      completionCode.textContent = `VONE-W5-${total}-${random3}`;
+
+      finalSummary.textContent =
+        `MISSION COMPLETE.\n\nRank: ${rank()}\nScore: ${total}\n\nWeek 5 takeaway:\nCompliance protects trust and accountability by requiring policies, controls, and evidence.\nAudit readiness = documentation + proof (internal first, external second).`;
+
+      codeBox.style.display = "block";
+      updateMeters();
+    }
+
+    function resetCase(){
+      // reset only current case progress (but keep global meters to avoid frustration)
+      stepIndex = 0;
+      caseNotes = [];
+      renderCase();
+    }
+
+    function replayAll(){
+      caseIndex = 0;
+      stepIndex = 0;
+      trust = 0; doc = 0; ev = 0; score = 0;
+      caseNotes = [];
+      renderCase();
+      updateMeters();
+    }
+
+    nextBtn.addEventListener("click", next);
+    resetBtn.addEventListener("click", resetCase);
+
+    copyBtn.addEventListener("click", async ()=>{
+      try{
+        await navigator.clipboard.writeText(completionCode.textContent);
+        copyBtn.textContent = "Copied!";
+        setTimeout(()=>copyBtn.textContent="Copy Code", 900);
+      }catch{
+        copyBtn.textContent = "Copy manually";
+        setTimeout(()=>copyBtn.textContent="Copy Code", 900);
+      }
+    });
+
+    replayBtn.addEventListener("click", ()=>window.location.reload());
+
+    renderCase();
+  </script>
+</body>
+</html>
